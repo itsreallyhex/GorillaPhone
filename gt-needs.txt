@@ -1,0 +1,8 @@
+﻿# Game types this project uses (names only). Filled in by gt-context.ps1; run "init" to rebuild the local cache from it.
+UnityLayer
+GorillaLocomotion.GTPlayer
+GTAudioSourceExtensions
+GorillaTagger
+ControllerInputPoller
+VRRig
+VRMap

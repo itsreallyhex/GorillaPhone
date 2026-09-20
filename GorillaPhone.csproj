@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Old-style project: every new .cs file needs a <Compile Include> line below. -->
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Optional per-user file (not committed) that sets <GamePath>. -->
+  <Import Project="GamePath.user.props" Condition="Exists('GamePath.user.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1DFDA2C5-4485-4B34-96CC-F745FCDEE7DA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>GorillaPhone</RootNamespace>
+    <AssemblyName>GorillaPhone</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <!-- Order: /p:GamePath=..., GamePath.user.props, the GT_GAME_PATH environment variable. -->
+    <GamePath Condition="'$(GamePath)' == '' And '$(GT_GAME_PATH)' != ''">$(GT_GAME_PATH)</GamePath>
+    <GamePath Condition="'$(GamePath)' == ''">C:\path\to\Gorilla Tag</GamePath>
+    <ManagedPath>$(GamePath)\Gorilla Tag_Data\Managed</ManagedPath>
+    <BepInExCorePath>$(GamePath)\BepInEx\core</BepInExCorePath>
+    <PluginsPath>$(GamePath)\BepInEx\plugins</PluginsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExCorePath)\BepInEx.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedPath)\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(ManagedPath)\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(ManagedPath)\UnityEngine.AudioModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.XRModule">
+      <HintPath>$(ManagedPath)\UnityEngine.XRModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression">
+      <HintPath>$(ManagedPath)\System.IO.Compression.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <!-- Add as needed: Unity.InputSystem (Keyboard), 0Harmony (patches). -->
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Plugin.cs" />
+    <Compile Include="PluginInfo.cs" />
+    <Compile Include="src\Diag\PhaseZeroDiag.cs" />
+    <Compile Include="src\Phone\PhoneConfig.cs" />
+    <Compile Include="src\Phone\PhoneObject.cs" />
+    <Compile Include="src\Phone\ThrowTracker.cs" />
+    <Compile Include="src\Util\ConfigWatcher.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- Copies the built DLL into the game's plugins folder. Skipped in CI or if the game is missing.
+       ContinueOnError so a locked DLL (game running) warns instead of failing the build. -->
+  <Target Name="CopyToPlugins" AfterTargets="Build" Condition="'$(CI)' != 'TRUE' And Exists('$(PluginsPath)')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginsPath)" ContinueOnError="true" />
+  </Target>
+</Project>
