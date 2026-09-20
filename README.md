@@ -16,7 +16,7 @@ That's everything. GorillaPhone is a single file and doesn't need any other prog
 
 ## How to download it
 
-GorillaPhone hasn't been released yet. When it is, you'll be able to download `GorillaPhone.dll` from the Releases page of this project on GitHub, and this section will link straight to it.
+Open the [Releases page](https://github.com/itsreallyhex/GorillaPhone/releases), find the newest release, and under Assets click `GorillaPhone.dll` to download it. That one file is all you need.
 
 ## How to install it
 
@@ -65,7 +65,7 @@ The map name comes from the game itself, and it's saved inside each photo you ta
 
 ### The music app (a sound test for now)
 
-For now, the Music app is a test of the phone's sound. Poke the big play button and the phone starts playing a short tune on a loop. Poke it again to pause. The plus and minus buttons change the volume.
+For now, the Music app is a test of the phone's sound. It isn't in the current download yet, and it will come in a later update. Once you have it, poke the big play button and the phone starts playing a short tune on a loop. Poke it again to pause. The plus and minus buttons change the volume.
 
 The sound really comes from the phone. It gets quieter as the phone gets farther from you, and it sounds muffled when a wall or the ground is between the phone and you. The screen says "muffled" when that happens, so you can see it working. Try dropping the phone behind a wall and walking around.
 
@@ -92,8 +92,8 @@ A few you might want:
 - `GrabRadius` sets how close your hand needs to be to grab the phone.
 - `PokeReach` sets how far past your finger's last joint the phone feels a touch. If presses land beyond where your finger looks, lower it. If you have to push through the screen, raise it.
 - `ShutterVolume` sets how loud the shutter click is.
-- `Volume`, in the `[Audio]` section, sets how loud the phone's tune starts, from 0 to 1. You can also use the plus and minus buttons on the phone.
-- `MuffleCutoff`, also in `[Audio]`, sets how muffled the tune gets behind a wall. A lower number is more muffled.
+- `Volume`, in the `[Audio]` section, sets how loud the phone's tune starts, from 0 to 1. You can also use the plus and minus buttons on the phone. (Only builds with the Music sound test have this.)
+- `MuffleCutoff`, also in `[Audio]`, sets how muffled the tune gets behind a wall. A lower number is more muffled. (Only builds with the Music sound test have this too.)
 - `Enabled` turns the phone off without removing the file.
 
 ## Good to know
