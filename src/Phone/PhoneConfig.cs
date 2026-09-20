@@ -22,7 +22,9 @@ namespace GorillaPhone.Phone
     public sealed class PhoneConfig
     {
         public readonly ConfigEntry<bool> Enabled;
-        public readonly ConfigEntry<float> Scale;
+        public readonly ConfigEntry<float> Width;
+        public readonly ConfigEntry<float> Height;
+        public readonly ConfigEntry<float> Thickness;
         public readonly ConfigEntry<float> GrabRadius;
         public readonly ConfigEntry<float> ThrowMultiplier;
         public readonly ConfigEntry<float> MaxThrowSpeed;
@@ -46,8 +48,13 @@ namespace GorillaPhone.Phone
         public PhoneConfig(ConfigFile c)
         {
             Enabled = c.Bind("Phone", "Enabled", true, "Spawn the phone when you load into the game.");
-            Scale = c.Bind("Phone", "Scale", 1.6f,
-                new ConfigDescription("Size multiplier. 1 is a real phone (7.5 x 15.5 cm), which looks small next to a gorilla hand; the default is larger.", new AcceptableValueRange<float>(0.5f, 4f)));
+            // 16 x 28.4 cm is 9:16, the shape of a short-form video, so video, camera and the music panel all fit the screen.
+            Width = c.Bind("Phone", "Width", 0.16f,
+                new ConfigDescription("Phone width in metres. A real phone is about 0.075; the default is larger so everything fits and it is easy to hold with a gorilla hand.", new AcceptableValueRange<float>(0.05f, 0.5f)));
+            Height = c.Bind("Phone", "Height", 0.2844f,
+                new ConfigDescription("Phone height in metres. Width x 16 / 9 gives the 9:16 shape short-form video needs.", new AcceptableValueRange<float>(0.08f, 0.8f)));
+            Thickness = c.Bind("Phone", "Thickness", 0.014f,
+                new ConfigDescription("Phone thickness in metres (the physics box is never thinner than 2 cm).", new AcceptableValueRange<float>(0.006f, 0.05f)));
             GrabRadius = c.Bind("Phone", "GrabRadius", 0.15f,
                 new ConfigDescription("Metres from your drawn hand to the phone's surface within which pressing grip grabs it.", new AcceptableValueRange<float>(0.03f, 0.5f)));
             ThrowMultiplier = c.Bind("Phone", "ThrowMultiplier", 1f,

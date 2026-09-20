@@ -71,6 +71,31 @@
       <HintPath>$(ManagedPath)\UnityEngine.XRModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <!-- TextMeshPro text on the screen (the compile set the kit verified). -->
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(ManagedPath)\Unity.TextMeshPro.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(ManagedPath)\UnityEngine.UIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreFontEngineModule">
+      <HintPath>$(ManagedPath)\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreTextEngineModule">
+      <HintPath>$(ManagedPath)\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(ManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <!-- Some Unity modules (AudioModule) are built for netstandard 2.1; the game's own netstandard.dll resolves that (kit reference 02). -->
     <Reference Include="netstandard">
       <HintPath>$(ManagedPath)\netstandard.dll</HintPath>
@@ -86,11 +111,16 @@
     <Compile Include="Plugin.cs" />
     <Compile Include="PluginInfo.cs" />
     <Compile Include="src\Diag\PhaseZeroDiag.cs" />
+    <Compile Include="src\Phone\PhoneBack.cs" />
     <Compile Include="src\Phone\PhoneConfig.cs" />
-    <Compile Include="src\Phone\PhoneObject.cs" />
+    <Compile Include="src\Phone\PhoneMaterials.cs" />
+    <Compile Include="src\Phone\PhoneScreen.cs" />
+    <Compile Include="src\Phone\PhoneText.cs" />
+    <Compile Include="src\Phone\ShapeTextures.cs" />
     <Compile Include="src\Photo\PhoneCamera.cs" />
     <Compile Include="src\Photo\PhotoSaver.cs" />
     <Compile Include="src\Photo\PngWriter.cs" />
+    <Compile Include="src\Phone\PhoneObject.cs" />
     <Compile Include="src\Phone\ThrowTracker.cs" />
     <Compile Include="src\Util\ConfigWatcher.cs" />
   </ItemGroup>

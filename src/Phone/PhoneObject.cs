@@ -1,6 +1,7 @@
 using System;
 using BepInEx.Logging;
 using GorillaLocomotion;
+using GorillaPhone.Photo;
 using UnityEngine;
 
 namespace GorillaPhone.Phone
@@ -15,23 +16,32 @@ namespace GorillaPhone.Phone
     /// </summary>
     public sealed class PhoneObject : MonoBehaviour
     {
-        static readonly Vector3 BaseSize = new Vector3(0.075f, 0.155f, 0.010f);
         static readonly Color BodyColor = new Color(0.10f, 0.10f, 0.12f, 1f);
         static readonly Color HoverColor = new Color(0.22f, 0.32f, 0.46f, 1f);
         static readonly Color ScreenColor = new Color(0.02f, 0.02f, 0.03f, 1f);
-        static readonly Color LensColor = new Color(0.30f, 0.30f, 0.34f, 1f);
         static readonly string[] ShaderNames = { "Universal Render Pipeline/Unlit", "Sprites/Default", "Unlit/Color" };
 
         PhoneConfig cfg;
         ManualLogSource log;
         Rigidbody rb;
         BoxCollider col;
-        Transform bodyT, screenT, lensT;
-        Material bodyMat, screenMat, lensMat;
+        Transform bodyT, screenT;
+        Material bodyMat, screenMat;
+        PhoneBack back;
         readonly ThrowTracker tracker = new ThrowTracker();
 
         bool held, heldLeft, hover, inputReady, prevL, prevR, loggedHandScale;
-        float appliedScale, lastImpact, nextBoundsCheck;
+        Vector3 appliedSize;
+        PhoneCamera pcam;
+        PhoneScreen screen;
+
+        /// <summary>True while a hand holds the phone, and which hand.</summary>
+        public bool IsHeld { get { return held; } }
+        public bool HeldLeft { get { return heldLeft; } }
+        /// <summary>The visible screen: its width and height, and its Z position in the phone's own space (the viewer is on the -Z side).</summary>
+        public Vector2 ScreenSize { get; private set; }
+        public float ScreenZ { get; private set; }
+        float lastImpact, nextBoundsCheck;
         float chordStart = -1f;
         int impactLogs;
         int locoMask;          // the layers the phone may touch: what the player walks on
@@ -118,7 +128,14 @@ namespace GorillaPhone.Phone
             GetBuiltIns(out cube, out quad, out shader);
             bodyT = MakePart("Body", cube, shader, BodyColor, out bodyMat);
             screenT = MakePart("Screen", quad, shader, ScreenColor, out screenMat);
-            lensT = MakePart("Lens", cube, shader, LensColor, out lensMat);
+            back = new PhoneBack(transform, log, cube);
+            ApplySize();
+
+            // The camera and the screen live on the same object and follow its size (ApplySize lays them out).
+            pcam = gameObject.AddComponent<PhoneCamera>();
+            pcam.Init(cfg, log, this);
+            screen = gameObject.AddComponent<PhoneScreen>();
+            screen.Init(cfg, log, this, pcam);
             ApplySize();
 
             log.LogInfo("phone built: layer " + layer + " (" + LayerMask.LayerToName(layer) + "), collides only with mask " + locoMask
@@ -170,30 +187,39 @@ namespace GorillaPhone.Phone
             if (m.HasProperty("_Color")) m.SetColor("_Color", c);
         }
 
+        Vector3 WantedSize()
+        {
+            return new Vector3(cfg.Width.Value, cfg.Height.Value, cfg.Thickness.Value);
+        }
+
         void ApplySize()
         {
-            float s = Mathf.Max(0.25f, cfg.Scale.Value);
-            appliedScale = s;
-            Vector3 size = BaseSize * s;
-            // The collider is thicker than the drawn slab (2 cm at scale 1) so it cannot tunnel through thin floors.
-            col.size = new Vector3(size.x, size.y, Mathf.Max(size.z, 0.02f * s));
+            Vector3 size = WantedSize();
+            appliedSize = size;
+            float s = size.x / 0.075f;   // size relative to a real phone's width; small details scale with it
+            // The collider is never thinner than 2 cm, even if the drawn slab is, so it cannot tunnel through thin floors.
+            col.size = new Vector3(size.x, size.y, Mathf.Max(size.z, 0.02f));
             rb.mass = 0.2f * s;
 
             bodyT.localPosition = Vector3.zero;
             bodyT.localScale = size;
             // The screen faces -Z (a Quad is seen from its -Z side), one face-plate thickness proud of the body.
-            screenT.localPosition = new Vector3(0f, 0f, -(size.z * 0.5f + 0.0004f * s));
-            screenT.localScale = new Vector3(size.x * 0.92f, size.y * 0.95f, 1f);
-            // A camera bump on the back (+Z) so the two sides can be told apart.
-            lensT.localPosition = new Vector3(size.x * 0.25f, size.y * 0.38f, size.z * 0.5f + 0.0015f * s);
-            lensT.localScale = new Vector3(size.x * 0.28f, size.x * 0.28f, 0.003f * s);
+            ScreenZ = -(size.z * 0.5f + 0.0004f * s);
+            ScreenSize = new Vector2(size.x * 0.92f, size.y * 0.95f);
+            screenT.localPosition = new Vector3(0f, 0f, ScreenZ);
+            screenT.localScale = new Vector3(ScreenSize.x, ScreenSize.y, 1f);
+            // The back (+Z): a camera plate with three lenses and a flash, and the banana logo.
+            back.Layout(size);
+
+            if (pcam != null) pcam.Layout(size, back.MainLens);
+            if (screen != null) screen.Layout();
         }
 
         // ------------------------------------------------------------------ per frame
 
         void Update()
         {
-            if (Mathf.Abs(Mathf.Max(0.25f, cfg.Scale.Value) - appliedScale) > 0.001f) ApplySize();
+            if ((WantedSize() - appliedSize).sqrMagnitude > 1e-8f) ApplySize();
 
             var poller = ControllerInputPoller.instance;
             var rig = VRRig.LocalRig;
@@ -314,7 +340,7 @@ namespace GorillaPhone.Phone
 
         // ------------------------------------------------------------------ haptics
 
-        void Haptic(bool left, float amplitude, float seconds)
+        public void Haptic(bool left, float amplitude, float seconds)
         {
             try
             {
@@ -476,7 +502,7 @@ namespace GorillaPhone.Phone
         {
             if (bodyMat != null) Destroy(bodyMat);
             if (screenMat != null) Destroy(screenMat);
-            if (lensMat != null) Destroy(lensMat);
+            if (back != null) back.Dispose();
         }
     }
 }
