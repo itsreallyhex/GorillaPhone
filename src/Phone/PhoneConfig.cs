@@ -12,6 +12,12 @@ namespace GorillaPhone.Phone
         RightSecondary   // B
     }
 
+    /// <summary>Whether saved photos are flipped top to bottom. Auto follows the graphics API; Flip/NoFlip override it if a photo comes out upside down.</summary>
+    public enum PhotoFlip { Auto, Flip, NoFlip }
+
+    /// <summary>Which of the game's cameras the phone camera copies its "what to draw" layers from.</summary>
+    public enum CameraMaskSource { ThirdPerson, Main }
+
     /// <summary>All tunable phone settings. Values are read live (.Value), so a config reload takes effect at once.</summary>
     public sealed class PhoneConfig
     {
@@ -24,6 +30,18 @@ namespace GorillaPhone.Phone
         public readonly ConfigEntry<float> RecallDepth;
         public readonly ConfigEntry<int> Layer;
         public readonly ConfigEntry<TestButton> TestSummonButton;   // TEST ONLY, remove before release
+
+        // Camera
+        public readonly ConfigEntry<float> PreviewFps;
+        public readonly ConfigEntry<int> PreviewHeight;
+        public readonly ConfigEntry<int> PhotoHeight;
+        public readonly ConfigEntry<string> PhotoFolder;
+        public readonly ConfigEntry<float> CameraFov;
+        public readonly ConfigEntry<bool> MirrorSelfie;
+        public readonly ConfigEntry<PhotoFlip> PhotoFlipMode;
+        public readonly ConfigEntry<CameraMaskSource> CameraMask;
+        public readonly ConfigEntry<bool> TriggerShutter;
+        public readonly ConfigEntry<float> ShutterVolume;
 
         public PhoneConfig(ConfigFile c)
         {
@@ -44,6 +62,27 @@ namespace GorillaPhone.Phone
                 new ConfigDescription("Unity layer for the phone's collider. Must not be one the game lets the player stand on; the mod checks and picks another if it is.", new AcceptableValueRange<int>(0, 31)));
             TestSummonButton = c.Bind("Testing", "TestSummonButton", TestButton.LeftSecondary,
                 "TEST ONLY (removed before release): one press of this controller button brings the phone to you. On Quest controllers LeftPrimary is X, LeftSecondary is Y, RightPrimary is A, RightSecondary is B.");
+
+            PreviewFps = c.Bind("Camera", "PreviewFps", 15f,
+                new ConfigDescription("How many times per second the live preview on the screen is drawn. Lower is lighter on the game.", new AcceptableValueRange<float>(1f, 60f)));
+            PreviewHeight = c.Bind("Camera", "PreviewHeight", 320,
+                new ConfigDescription("Height in pixels of the live preview (the width follows the screen shape).", new AcceptableValueRange<int>(64, 1080)));
+            PhotoHeight = c.Bind("Camera", "PhotoHeight", 1920,
+                new ConfigDescription("Height in pixels of a saved photo (the width follows the screen shape, so 1920 gives about 1080 x 1920).", new AcceptableValueRange<int>(240, 4096)));
+            PhotoFolder = c.Bind("Camera", "PhotoFolder", "",
+                "Folder photos are saved to. Empty means your Pictures folder, in a GorillaPhone subfolder.");
+            CameraFov = c.Bind("Camera", "CameraFov", 75f,
+                new ConfigDescription("Vertical field of view of the phone camera, in degrees.", new AcceptableValueRange<float>(30f, 120f)));
+            MirrorSelfie = c.Bind("Camera", "MirrorSelfie", true,
+                "Mirror the front (selfie) camera in the preview and in the saved photo, like a real phone's mirror preview.");
+            PhotoFlipMode = c.Bind("Camera", "PhotoFlip", PhotoFlip.Auto,
+                "Auto works out from the graphics API whether saved photos need flipping top to bottom. If a photo comes out upside down, set Flip (or NoFlip if it was flipped by mistake).");
+            CameraMask = c.Bind("Camera", "CameraMask", CameraMaskSource.ThirdPerson,
+                "Which of the game's cameras the phone camera copies its layers from. ThirdPerson is meant to include your own avatar; if selfies are missing something, try Main.");
+            TriggerShutter = c.Bind("Camera", "TriggerShutter", true,
+                "While you hold the phone, squeeze the trigger of the holding hand to take a photo.");
+            ShutterVolume = c.Bind("Camera", "ShutterVolume", 0.6f,
+                new ConfigDescription("Volume of the shutter click.", new AcceptableValueRange<float>(0f, 1f)));
         }
     }
 }

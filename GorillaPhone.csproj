@@ -71,6 +71,11 @@
       <HintPath>$(ManagedPath)\UnityEngine.XRModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <!-- Some Unity modules (AudioModule) are built for netstandard 2.1; the game's own netstandard.dll resolves that (kit reference 02). -->
+    <Reference Include="netstandard">
+      <HintPath>$(ManagedPath)\netstandard.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.IO.Compression">
       <HintPath>$(ManagedPath)\System.IO.Compression.dll</HintPath>
       <Private>False</Private>
@@ -83,6 +88,9 @@
     <Compile Include="src\Diag\PhaseZeroDiag.cs" />
     <Compile Include="src\Phone\PhoneConfig.cs" />
     <Compile Include="src\Phone\PhoneObject.cs" />
+    <Compile Include="src\Photo\PhoneCamera.cs" />
+    <Compile Include="src\Photo\PhotoSaver.cs" />
+    <Compile Include="src\Photo\PngWriter.cs" />
     <Compile Include="src\Phone\ThrowTracker.cs" />
     <Compile Include="src\Util\ConfigWatcher.cs" />
   </ItemGroup>
