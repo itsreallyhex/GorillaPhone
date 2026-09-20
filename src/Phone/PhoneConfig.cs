@@ -26,6 +26,7 @@ namespace GorillaPhone.Phone
         public readonly ConfigEntry<float> Height;
         public readonly ConfigEntry<float> Thickness;
         public readonly ConfigEntry<float> GrabRadius;
+        public readonly ConfigEntry<float> PokeReach;
         public readonly ConfigEntry<float> ThrowMultiplier;
         public readonly ConfigEntry<float> MaxThrowSpeed;
         public readonly ConfigEntry<float> ImpactHapticSpeed;
@@ -45,6 +46,9 @@ namespace GorillaPhone.Phone
         public readonly ConfigEntry<bool> TriggerShutter;
         public readonly ConfigEntry<float> ShutterVolume;
 
+        // Home screen
+        public readonly ConfigEntry<string> DateFormat;
+
         public PhoneConfig(ConfigFile c)
         {
             Enabled = c.Bind("Phone", "Enabled", true, "Spawn the phone when you load into the game.");
@@ -57,6 +61,8 @@ namespace GorillaPhone.Phone
                 new ConfigDescription("Phone thickness in metres (the physics box is never thinner than 2 cm).", new AcceptableValueRange<float>(0.006f, 0.05f)));
             GrabRadius = c.Bind("Phone", "GrabRadius", 0.15f,
                 new ConfigDescription("Metres from your drawn hand to the phone's surface within which pressing grip grabs it.", new AcceptableValueRange<float>(0.03f, 0.5f)));
+            PokeReach = c.Bind("Phone", "PokeReach", 0.3f,
+                new ConfigDescription("How far past your finger's last joint the touch point is, as a fraction of that finger segment. Lower it if presses land beyond where your finger is, raise it if you have to push past the screen.", new AcceptableValueRange<float>(-0.5f, 1.2f)));
             ThrowMultiplier = c.Bind("Phone", "ThrowMultiplier", 1f,
                 new ConfigDescription("Scales the throw velocity. 1 is your real hand speed.", new AcceptableValueRange<float>(0.2f, 3f)));
             MaxThrowSpeed = c.Bind("Phone", "MaxThrowSpeed", 30f,
@@ -90,6 +96,9 @@ namespace GorillaPhone.Phone
                 "While you hold the phone, squeeze the trigger of the holding hand to take a photo.");
             ShutterVolume = c.Bind("Camera", "ShutterVolume", 0.6f,
                 new ConfigDescription("Volume of the shutter click.", new AcceptableValueRange<float>(0f, 1f)));
+
+            DateFormat = c.Bind("Home", "DateFormat", "",
+                "How the date is shown on the home screen. Empty uses your PC's own long date format (its language and order). Or give a .NET format such as \"dddd d MMMM\".");
         }
     }
 }

@@ -297,14 +297,18 @@ namespace GorillaPhone.Photo
                 default: flip = SystemInfo.graphicsUVStartsAtTop; break;
             }
 
+            // The map is recorded now, when the photo is taken, and stored inside the PNG (the gallery shows it).
+            string zones = MapInfo.CurrentZones();
+            log.LogInfo("photo map (active zones): " + (zones.Length == 0 ? "none" : zones));
+
             photoBusy = true;
             lastShot = Time.unscaledTime;
-            AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32, req => OnReadback(req, rt, w, h, flip, mirror, front));
+            AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32, req => OnReadback(req, rt, w, h, flip, mirror, front, zones));
             PlayClick();
             return true;
         }
 
-        void OnReadback(AsyncGPUReadbackRequest req, RenderTexture rt, int w, int h, bool flip, bool mirror, bool front)
+        void OnReadback(AsyncGPUReadbackRequest req, RenderTexture rt, int w, int h, bool flip, bool mirror, bool front, string zones)
         {
             try
             {
@@ -323,7 +327,8 @@ namespace GorillaPhone.Photo
                     FlipVertical = flip,
                     MirrorHorizontal = mirror,
                     Folder = PhotoFolder(),
-                    FileName = "GorillaPhone_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff") + (front ? "_selfie" : "") + ".png"
+                    FileName = "GorillaPhone_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", System.Globalization.CultureInfo.InvariantCulture) + (front ? "_selfie" : "") + ".png",
+                    Comment = PhotoLibrary.BuildComment(front, zones)
                 };
                 PhotoSaver.SaveAsync(job, res => finished.Enqueue(res));
             }
@@ -338,7 +343,8 @@ namespace GorillaPhone.Photo
             }
         }
 
-        string PhotoFolder()
+        /// <summary>Where photos are saved and where the gallery looks: the PhotoFolder setting, or Pictures\GorillaPhone.</summary>
+        public string PhotoFolder()
         {
             string f = cfg.PhotoFolder.Value;
             if (string.IsNullOrEmpty(f) || f.Trim().Length == 0)

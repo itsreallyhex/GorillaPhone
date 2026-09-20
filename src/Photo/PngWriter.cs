@@ -13,8 +13,19 @@ namespace GorillaPhone.Photo
         static readonly byte[] Signature = { 137, 80, 78, 71, 13, 10, 26, 10 };
         static uint[] crcTable;
 
-        /// <summary>Writes rgba (width*height*4 bytes, first row = top of the image) as an RGB PNG. Alpha is ignored.</summary>
+        /// <summary>The PNG text keyword the phone stores its photo details under (camera and map).</summary>
+        public const string CommentKeyword = "GorillaPhone";
+
         public static void WriteRgb(Stream output, byte[] rgba, int width, int height)
+        {
+            WriteRgb(output, rgba, width, height, null);
+        }
+
+        /// <summary>
+        /// Writes rgba (width*height*4 bytes, first row = top of the image) as an RGB PNG. Alpha is ignored.
+        /// A non-empty comment is stored in a standard tEXt chunk before the image data (other viewers ignore it).
+        /// </summary>
+        public static void WriteRgb(Stream output, byte[] rgba, int width, int height, string comment)
         {
             if (width <= 0 || height <= 0) throw new ArgumentException("bad size");
             if (rgba.Length < width * height * 4) throw new ArgumentException("pixel buffer too small");
@@ -47,8 +58,20 @@ namespace GorillaPhone.Photo
             ihdr[11] = 0;   // adaptive filtering
             ihdr[12] = 0;   // no interlace
             Chunk(output, "IHDR", ihdr);
+            if (!string.IsNullOrEmpty(comment)) Chunk(output, "tEXt", TextChunk(CommentKeyword, comment));
             Chunk(output, "IDAT", idat);
             Chunk(output, "IEND", new byte[0]);
+        }
+
+        /// <summary>A tEXt chunk body: keyword, a zero byte, then the text (Latin-1; anything outside it becomes '?').</summary>
+        static byte[] TextChunk(string keyword, string text)
+        {
+            var b = new byte[keyword.Length + 1 + text.Length];
+            int i = 0;
+            foreach (char c in keyword) b[i++] = (byte)(c < 256 ? c : '?');
+            b[i++] = 0;
+            foreach (char c in text) b[i++] = (byte)(c < 256 ? c : '?');
+            return b;
         }
 
         static byte[] Zlib(byte[] data)

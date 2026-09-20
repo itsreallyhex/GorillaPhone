@@ -15,9 +15,10 @@ namespace GorillaPhone.Phone
     /// Everything is plain quads plus TextMeshPro labels (no Canvas). Buttons are poked with an index
     /// fingertip (no colliders); the holding hand's trigger also takes a photo in the Camera app.
     /// </summary>
-    public sealed class PhoneScreen : MonoBehaviour
+    public sealed partial class PhoneScreen : MonoBehaviour
     {
-        enum Page { Home, Camera }
+        // Confirm is the "delete this photo?" question over the Viewer.
+        enum Page { Home, Camera, Gallery, Viewer, Confirm }
 
         // Poking, in metres in the screen's own space (the viewer is on the -Z side).
         // A press happens when the fingertip crosses the plane PressDepth in front of the screen, moving toward it, and either
@@ -78,7 +79,7 @@ namespace GorillaPhone.Phone
 
         // Home page
         Part homeBg;
-        TextMeshPro clock;
+        TextMeshPro clock, dateText;
         float nextClockCheck;
         readonly List<App> apps = new List<App>();
 
@@ -108,6 +109,7 @@ namespace GorillaPhone.Phone
             BuildIsland();
             BuildHome();
             BuildCamera();
+            BuildGallery();
 
             pcam.ModeChanged += OnModeChanged;
             pcam.ThumbnailChanged += OnThumbnailChanged;
@@ -177,9 +179,11 @@ namespace GorillaPhone.Phone
         {
             homeBg = Opaque(homeRoot, "Background", new Color(0.05f, 0.06f, 0.10f, 1f), null, 0);
             clock = PhoneText.Create(log, homeRoot, "Clock", "--:--", 0.01f, 0.1f, TextColor, 30);
+            dateText = PhoneText.Create(log, homeRoot, "Date", "", 0.01f, 0.1f, DimText, 30);
 
             Texture2D iconTex = Track(ShapeTextures.AppIcon(128));
             AddApp("Camera", new Color(0.20f, 0.55f, 0.95f), true, iconTex, Track(ShapeTextures.GlyphCamera(128)), OpenCamera);
+            AddApp("Gallery", new Color(0.18f, 0.72f, 0.55f), true, iconTex, Track(ShapeTextures.GlyphGallery(128)), OpenGallery);
             AddApp("Music", new Color(0.95f, 0.35f, 0.45f), false, iconTex, Track(ShapeTextures.GlyphMusic(128)), null);
             AddApp("Video", new Color(0.58f, 0.38f, 0.95f), false, iconTex, Track(ShapeTextures.GlyphVideo(128)), null);
         }
@@ -236,7 +240,7 @@ namespace GorillaPhone.Phone
             root.localPosition = new Vector3(0f, 0f, phone.ScreenZ);
             root.localRotation = Quaternion.identity;
             root.localScale = Vector3.one;
-            const float margin = 0.008f;   // a little forgiveness around each button
+            const float margin = 0.012f;   // forgiveness around each button (in game pokes landed up to 2 cm off)
 
             // ---- Dynamic island: a black pill at the top centre, the selfie camera on its right.
             // PhoneCamera puts the front camera at the same spot (0.075 and 0.055 of the screen width).
@@ -248,13 +252,15 @@ namespace GorillaPhone.Phone
             Place(homeBg, 0f, 0f, sw, sh, -0.0004f);
             PhoneText.Resize(clock, 0.075f * sw, 0.5f * sw);
             PhoneText.Place(clock, 0f, sh * 0.5f - 0.20f * sw, -0.0020f);   // below the island
+            PhoneText.Resize(dateText, 0.04f * sw, 0.92f * sw);
+            PhoneText.Place(dateText, 0f, sh * 0.5f - 0.29f * sw, -0.0020f);
 
             float isz = 0.32f * sw;
             for (int i = 0; i < apps.Count; i++)
             {
                 App a = apps[i];
                 float cx = (i % 2 == 0 ? -0.23f : 0.23f) * sw;
-                float cy = sh * 0.5f - 0.50f * sw - (i / 2) * 0.50f * sw;
+                float cy = sh * 0.5f - 0.62f * sw - (i / 2) * 0.50f * sw;
                 Place(a.Icon, cx, cy, isz, isz, -0.0010f);
                 Place(a.Glyph, cx, cy, isz, isz, -0.0016f);
                 PhoneText.Resize(a.Label, 0.055f * sw, 0.42f * sw);
@@ -304,6 +310,8 @@ namespace GorillaPhone.Phone
             float tw = 0.20f * sw, th = tw / thumbAspect, m = 0.012f * sw;
             Place(thumbFrame, -0.32f * sw, y, tw + m, th + m, -0.0012f);
             Place(thumb, -0.32f * sw, y, tw, th, -0.0016f);
+
+            LayoutGallery(sw, sh, margin);
         }
 
         static void Place(Part p, float x, float y, float w, float h, float z)
@@ -325,8 +333,18 @@ namespace GorillaPhone.Phone
             page = p;
             homeRoot.gameObject.SetActive(p == Page.Home);
             camRoot.gameObject.SetActive(p == Page.Camera);
-            for (int h = 0; h < 2; h++) { armed[h] = false; prevValid[h] = false; }   // a page change is not a poke
+            galRoot.gameObject.SetActive(p == Page.Gallery);
+            viewRoot.gameObject.SetActive(p == Page.Viewer || p == Page.Confirm);
+            confirmRoot.gameObject.SetActive(p == Page.Confirm);
+            for (int h = 0; h < 2; h++) { armed[h] = false; prevValid[h] = false; touching[h] = false; }   // a page change is not a poke
+            dragging = false;
             pcam.PreviewEnabled = screenOn && p == Page.Camera;
+            OnPageChanged(p);
+        }
+
+        void OpenGallery()
+        {
+            SetPage(Page.Gallery);
         }
 
         void OpenCamera()
@@ -366,12 +384,20 @@ namespace GorillaPhone.Phone
         {
             if (pcam == null || phone == null) return;
 
+            // Finished background work (a scan, a decoded photo, a delete) is handled even while the screen is off.
+            if (worker != null) worker.Pump(6);
+
             bool on = ShouldBeOn();
             if (on != screenOn) SetScreen(on);
             if (!screenOn) return;
 
-            if (page == Page.Home) UpdateHome();
-            else UpdateCamera();
+            switch (page)
+            {
+                case Page.Home: UpdateHome(); break;
+                case Page.Camera: UpdateCamera(); break;
+                case Page.Gallery: UpdateGallery(); break;
+                default: UpdateViewer(); break;
+            }
 
             var poller = ControllerInputPoller.instance;
             var rig = VRRig.LocalRig;
@@ -384,7 +410,9 @@ namespace GorillaPhone.Phone
         {
             if (Time.unscaledTime < nextClockCheck) return;
             nextClockCheck = Time.unscaledTime + 0.5f;
-            PhoneText.Set(clock, DateTime.Now.ToString("HH:mm"));
+            DateTime now = DateTime.Now;   // the PC's clock and time zone: the date is right for wherever the player lives
+            PhoneText.Set(clock, now.ToString("HH:mm"));
+            PhoneText.Set(dateText, FormatDate(now));
         }
 
         void UpdateCamera()
@@ -459,10 +487,10 @@ namespace GorillaPhone.Phone
             {
                 bool left = h == 0;
                 // The hand holding the phone does not poke it.
-                if (phone.IsHeld && phone.HeldLeft == left) { armed[h] = false; prevValid[h] = false; continue; }
+                if (phone.IsHeld && phone.HeldLeft == left) { armed[h] = false; prevValid[h] = false; CancelTouch(h); continue; }
 
-                Vector3 tip;
-                if (!Tip(rig, left, out tip)) { armed[h] = false; prevValid[h] = false; continue; }
+                Vector3 tip, bone3, fdir;
+                if (!Tip(rig, left, out tip, out bone3, out fdir)) { armed[h] = false; prevValid[h] = false; CancelTouch(h); continue; }
 
                 // The fingertip in the screen's own space: z is negative in front of the screen.
                 Vector3 p = root.InverseTransformPoint(tip);
@@ -471,6 +499,15 @@ namespace GorillaPhone.Phone
                 bool overScreen = Mathf.Abs(p.x) <= sw * 0.5f + 0.03f && Mathf.Abs(p.y) <= sh * 0.5f + 0.03f;
                 if (!overScreen) armed[h] = false;
                 else if (p.z < -ArmDepth) armed[h] = true;
+
+                // A finger that pressed into the Gallery grid stays "touching" while it is within reach of the screen, so it can drag.
+                if (touching[h])
+                {
+                    // Released only when the finger clearly leaves (2 cm in front) or is far through: a hand wobbles more than 0.6 cm in depth, and that dropped every drag.
+                    bool still = overScreen && p.z >= -TouchRelease && p.z < TouchMaxBehind;
+                    if (still) GalleryTouchMove(h, p);
+                    else { touching[h] = false; GalleryTouchEnd(h, p); }
+                }
 
                 if (prevValid[h] && dt > 0f)
                 {
@@ -484,12 +521,21 @@ namespace GorillaPhone.Phone
                             armed[h] = false;
                             // Test where the fingertip crossed the plane, not where it ended up, so a fast poke cannot skip a button.
                             float t = (-PressDepth - q.z) / (p.z - q.z);
-                            Button b = Hit(Vector3.Lerp(q, p, t));
+                            Vector3 tipAt = Vector3.Lerp(q, p, t);
+                            Vector3 at = Aim(tipAt, bone3, fdir);
+                            Button b = Hit(at);
+                            log.LogInfo(string.Format("poke: page={0} tip=({1:0.0},{2:0.0}) aim=({3:0.0},{4:0.0}) cm, hit={5}",
+                                page, tipAt.x * 100f, tipAt.y * 100f, at.x * 100f, at.y * 100f, b != null ? "button" : "none"));
                             if (b != null && Time.unscaledTime >= b.NextAllowed)
                             {
                                 b.NextAllowed = Time.unscaledTime + b.Cooldown;
                                 phone.Haptic(left, b.OnPress != null ? 0.35f : 0.12f, 0.04f);   // a lighter buzz for an app that is not there yet
                                 if (b.OnPress != null) b.OnPress();
+                            }
+                            else if (b == null && GalleryWantsTouch(at))
+                            {
+                                touching[h] = true;   // a press into the photo grid starts a tap or a drag
+                                GalleryTouchBegin(h, at, left);
                             }
                         }
                     }
@@ -511,14 +557,34 @@ namespace GorillaPhone.Phone
         }
 
         /// <summary>Index fingertip, projected past the last bone (the projection that worked for the kit's poke buttons in game).</summary>
-        static bool Tip(VRRig rig, bool left, out Vector3 tip)
+        bool Tip(VRRig rig, bool left, out Vector3 tip, out Vector3 bone3, out Vector3 dir)
         {
-            tip = Vector3.zero;
+            tip = bone3 = dir = Vector3.zero;
             VRMapIndex idx = left ? rig.leftIndex : rig.rightIndex;
             if (idx == null || idx.fingerBone2 == null || idx.fingerBone3 == null) return false;
             Vector3 b2 = idx.fingerBone2.position, b3 = idx.fingerBone3.position;
-            tip = b3 + (b3 - b2) * 0.8f;
+            tip = b3 + (b3 - b2) * cfg.PokeReach.Value;   // was a fixed 0.8: in game the touch point landed about 1.5 cm past the drawn fingertip
+            bone3 = b3;
+            dir = b3 - b2;
             return true;
+        }
+
+        /// <summary>
+        /// Where the finger points on the screen: its line (last bone, along the last segment) meets the screen plane.
+        /// That does not depend on the guessed fingertip length, which at a slanted approach shifts the hit sideways
+        /// (In-game 2026-09-20: buttons only worked when pressed beside the icon). A finger nearly parallel to the
+        /// screen keeps the plain tip position, since the line's hit would swing wildly.
+        /// </summary>
+        Vector3 Aim(Vector3 tipAt, Vector3 bone3World, Vector3 dirWorld)
+        {
+            Vector3 b3 = root.InverseTransformPoint(bone3World);
+            Vector3 d = root.InverseTransformDirection(dirWorld).normalized;
+            if (d.z < 0.35f) return tipAt;             // z grows toward the screen: not pointing into it enough
+            float s = -b3.z / d.z;                     // distance along the finger to the screen plane
+            if (s < -0.05f || s > 0.2f) return tipAt;  // nonsense: the bone is far from the screen
+            Vector3 hit = b3 + d * s;
+            hit.z = tipAt.z;
+            return hit;
         }
 
         void OnDestroy()
@@ -529,6 +595,7 @@ namespace GorillaPhone.Phone
                 pcam.ThumbnailChanged -= OnThumbnailChanged;
                 pcam.PreviewEnabled = false;
             }
+            DestroyGallery();
             foreach (Texture2D t in textures) if (t != null) Destroy(t);
             foreach (Material m in materials) if (m != null) Destroy(m);
         }

@@ -18,6 +18,8 @@ namespace GorillaPhone.Photo
         public string Folder;
         public string FileName;
         public int ThumbHeight = 160;
+        /// <summary>Stored inside the PNG (camera and map), see PhotoLibrary.BuildComment. Optional.</summary>
+        public string Comment;
     }
 
     public sealed class PhotoResult
@@ -69,7 +71,7 @@ namespace GorillaPhone.Photo
                 long bytes;
                 using (var fs = new FileStream(tmpPath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    PngWriter.WriteRgb(fs, px, w, h);
+                    PngWriter.WriteRgb(fs, px, w, h, job.Comment);
                     bytes = fs.Length;
                 }
                 if (File.Exists(finalPath)) File.Delete(finalPath);

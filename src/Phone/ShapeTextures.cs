@@ -238,5 +238,65 @@ namespace GorillaPhone.Phone
                 return crescent ? yellow : Clear;
             });
         }
+
+        // ------------------------------------------------------------------ gallery
+
+        /// <summary>A round button with a triangle pointing in the direction (dx, dy).</summary>
+        static Texture2D ArrowButton(string name, int size, float dx, float dy)
+        {
+            var dir = new Vector2(dx, dy);
+            var perp = new Vector2(-dy, dx);
+            Vector2 tip = dir * 0.20f, baseCentre = -dir * 0.10f;
+            Vector2 a = baseCentre + perp * 0.17f, b = baseCentre - perp * 0.17f;
+            return RoundButton(name, size, (x, y) => InTriangle(x, y, tip, a, b));
+        }
+
+        public static Texture2D ArrowUp(int size) { return ArrowButton("GP_ArrowUp", size, 0f, 1f); }
+        public static Texture2D ArrowDown(int size) { return ArrowButton("GP_ArrowDown", size, 0f, -1f); }
+        public static Texture2D ArrowLeft(int size) { return ArrowButton("GP_ArrowLeft", size, -1f, 0f); }
+        public static Texture2D ArrowRight(int size) { return ArrowButton("GP_ArrowRight", size, 1f, 0f); }
+
+        /// <summary>The "back to all photos" button: four small squares.</summary>
+        public static Texture2D GridButton(int size)
+        {
+            return RoundButton("GP_Grid", size, (x, y) =>
+                InRect(x, y, -0.085f, 0.085f, 0.065f, 0.065f) || InRect(x, y, 0.085f, 0.085f, 0.065f, 0.065f) ||
+                InRect(x, y, -0.085f, -0.085f, 0.065f, 0.065f) || InRect(x, y, 0.085f, -0.085f, 0.065f, 0.065f));
+        }
+
+        /// <summary>The delete button: a small bin with a lid and slots.</summary>
+        public static Texture2D Trash(int size)
+        {
+            return RoundButton("GP_Trash", size, (x, y) =>
+            {
+                bool lid = InRect(x, y, 0f, 0.125f, 0.17f, 0.025f);
+                bool handle = InRect(x, y, 0f, 0.18f, 0.06f, 0.02f);
+                bool body = InRect(x, y, 0f, -0.04f, 0.13f, 0.14f);
+                bool slot = InRect(x, y, -0.05f, -0.04f, 0.017f, 0.09f) || InRect(x, y, 0f, -0.04f, 0.017f, 0.09f) || InRect(x, y, 0.05f, -0.04f, 0.017f, 0.09f);
+                return lid || handle || (body && !slot);
+            });
+        }
+
+        /// <summary>A white rounded rectangle of the given pixel size (a card for the delete question).</summary>
+        public static Texture2D Card(int w, int h)
+        {
+            return Make("GP_Card", w, h, (x, y) => InRoundRect(x, y, 0.5f * w / h, 0.5f, 0.12f) ? White : Clear);
+        }
+
+        /// <summary>The Gallery app glyph: a picture frame with a sun and two mountains.</summary>
+        public static Texture2D GlyphGallery(int size)
+        {
+            Vector2 m1a = new Vector2(-0.22f, -0.15f), m1b = new Vector2(-0.06f, 0.07f), m1c = new Vector2(0.10f, -0.15f);
+            Vector2 m2a = new Vector2(-0.02f, -0.15f), m2b = new Vector2(0.11f, -0.02f), m2c = new Vector2(0.24f, -0.15f);
+            return Make("GP_GlyphGallery", size, (x, y) =>
+            {
+                bool frame = InRoundRect(x, y, 0.32f, 0.26f, 0.06f) && !InRoundRect(x, y, 0.27f, 0.21f, 0.03f);
+                float sx = x - 0.13f, sy = y - 0.09f;
+                bool sun = sx * sx + sy * sy <= 0.055f * 0.055f;
+                bool inner = InRect(x, y, 0f, 0f, 0.26f, 0.20f);
+                bool mountains = inner && (InTriangle(x, y, m1a, m1b, m1c) || InTriangle(x, y, m2a, m2b, m2c));
+                return frame || sun || mountains ? White : Clear;
+            });
+        }
     }
 }

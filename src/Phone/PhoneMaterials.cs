@@ -76,6 +76,13 @@ namespace GorillaPhone.Phone
             if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", t);
         }
 
+        /// <summary>Shows only part of the texture (a crop, like a photo cut to fit a square tile): UV scale and offset on the main texture.</summary>
+        public static void SetCrop(Material m, Vector2 scale, Vector2 offset)
+        {
+            if (m.HasProperty("_BaseMap")) { m.SetTextureScale("_BaseMap", scale); m.SetTextureOffset("_BaseMap", offset); }
+            if (m.HasProperty("_MainTex")) { m.SetTextureScale("_MainTex", scale); m.SetTextureOffset("_MainTex", offset); }
+        }
+
         /// <summary>Flips the texture left to right without touching the mesh (scale -1, offset 1; the texture clamps).</summary>
         public static void SetMirror(Material m, bool mirror)
         {

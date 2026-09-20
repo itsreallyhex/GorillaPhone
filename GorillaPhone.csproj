@@ -115,10 +115,14 @@
     <Compile Include="src\Phone\PhoneConfig.cs" />
     <Compile Include="src\Phone\PhoneMaterials.cs" />
     <Compile Include="src\Phone\PhoneScreen.cs" />
+    <Compile Include="src\Phone\PhoneScreen.Gallery.cs" />
     <Compile Include="src\Phone\PhoneText.cs" />
     <Compile Include="src\Phone\ShapeTextures.cs" />
     <Compile Include="src\Photo\PhoneCamera.cs" />
+    <Compile Include="src\Photo\MapInfo.cs" />
+    <Compile Include="src\Photo\PhotoLibrary.cs" />
     <Compile Include="src\Photo\PhotoSaver.cs" />
+    <Compile Include="src\Photo\PngReader.cs" />
     <Compile Include="src\Photo\PngWriter.cs" />
     <Compile Include="src\Phone\PhoneObject.cs" />
     <Compile Include="src\Phone\ThrowTracker.cs" />

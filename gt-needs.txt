@@ -6,3 +6,10 @@ GorillaTagger
 ControllerInputPoller
 VRRig
 VRMap
+ZoneManagement
+GTZone
+ZoneData
+GorillaSetZoneTrigger
+RaiseEvent
+PUN
+Fusion
