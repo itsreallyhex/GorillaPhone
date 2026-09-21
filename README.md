@@ -2,21 +2,24 @@
 
 Hi, and welcome! GorillaPhone is a mod that gives you a phone in Gorilla Tag.
 
-It's a real object in the world. You can grab it, hold it, drop it, and throw it, and it bounces off the floor and walls like you'd expect. The screen has a home screen, a camera, and a photo gallery, so you can take pictures of the places you visit and look at them without leaving the game.
+It's a real object in the world. You can grab it, hold it, drop it, and throw it, and it bounces off the floor and walls like you'd expect. The screen has a home screen, a camera, a photo gallery, a sound test, and a Video app for short videos. So you can take pictures of the places you visit, look at them without leaving the game, and scroll through videos on the phone while you hang out in the trees.
 
-This is an early version (0.1.0). Most of it has been played and tested in VR, but the Gallery and the Music sound test are new, so you might run into a rough edge or two. Thanks for giving it a try.
+This is an early version (0.1.0). Everything in this guide has been played and tested in VR, but the Music sound test and the Video app are the newest parts, so you might run into a rough edge or two. Thanks for giving it a try.
 
 ## What you need
 
 - Gorilla Tag on PC (the Steam version) and a VR headset. It doesn't work on a Quest that isn't connected to a PC.
 - Windows 10 or 11.
 - BepInEx 5, the mod loader that most Gorilla Tag mods use. The install steps below show where to get it.
+- For the Video app only: Microsoft Edge or Google Chrome, and an internet connection. Windows already comes with Edge. The rest of the phone needs neither.
 
-That's everything. GorillaPhone is a single file and doesn't need any other programs.
+GorillaPhone itself is a single file. The only other program it uses is the browser you already have.
 
 ## How to download it
 
 Open the [Releases page](https://github.com/itsreallyhex/GorillaPhone/releases), find the newest release, and under Assets click `GorillaPhone.dll` to download it. That one file is all you need.
+
+The Music sound test and the Video app were added after the first release, so they only show up in the download once a newer release is published. If you'd like them sooner, the source code on this page has them, and you can build it yourself.
 
 ## How to install it
 
@@ -38,7 +41,7 @@ The screen turns on when you're holding the phone or looking at it from close by
 
 You'll see the time, today's date, and your apps. The date comes from your computer, so it uses your own time zone and your usual date style.
 
-There are three apps you can use right now: Camera, Gallery, and Music. Video is on the screen too, but it's greyed out and marked "soon". It's a placeholder for later.
+There are four apps: Camera, Gallery, Music, and Video.
 
 To open an app, poke its icon with the pointing finger of your free hand.
 
@@ -65,11 +68,29 @@ The map name comes from the game itself, and it's saved inside each photo you ta
 
 ### The music app (a sound test for now)
 
-For now, the Music app is a test of the phone's sound. It isn't in the current download yet, and it will come in a later update. Once you have it, poke the big play button and the phone starts playing a short tune on a loop. Poke it again to pause. The plus and minus buttons change the volume.
+For now, the Music app is a test of the phone's sound. It came after the first release, so the first download doesn't have it. Poke the big play button and the phone starts playing a short tune on a loop. Poke it again to pause. The plus and minus buttons change the volume.
 
 The sound really comes from the phone. It gets quieter as the phone gets farther from you, and it sounds muffled when a wall or the ground is between the phone and you. The screen says "muffled" when that happens, so you can see it working. Try dropping the phone behind a wall and walking around.
 
 Only you can hear it. Playing music from your computer through the phone will come later.
+
+### The video app
+
+The Video app shows short vertical videos, the kind you swipe through. It opens a website that plays them (a popular short video site by default, and you can change it), and you watch and swipe without leaving the game.
+
+Here's how it works. The first time you open it, the phone starts a browser in its own window on your computer's desktop. That's Microsoft Edge, or Chrome if you don't have Edge. The phone shows what the browser shows, and your pokes and swipes go back to it. When you close the game, the browser closes too. It keeps its own profile in `%LOCALAPPDATA%\GorillaPhone\browser-profile`, separate from your everyday browser, so nothing from your normal browsing is mixed in.
+
+- Tap where you would click. If you miss a small button by a little, the phone nudges your tap onto the nearest clickable spot, which helps with things like the close cross on a pop up.
+- Flick up quickly for the next video, and flick down for the previous one.
+- A slower drag scrolls the page, which is handy for comments and lists.
+- The chip in the bottom left switches between Swipe and Drag. In Drag mode your finger works like a mouse, so you can use sliders and puzzle style checks.
+- Back goes to the previous page and Reload refreshes it. The plus and minus buttons change the volume, the same volume as the Music app. The home button leaves the app and pauses the video.
+
+The sound comes out of the phone, not your speakers. It gets quieter as the phone gets farther away, it sounds muffled behind a wall, and your computer stays silent. The video keeps playing when you put the phone down or walk away, so you can toss it across the room and hear it from there. It only pauses when you go back to the home screen.
+
+You can watch without an account. Likes, comments and follows need one. There's no keyboard in VR, so log in once in the browser window on your desktop and it remembers you. Your login is saved in the profile folder above, so treat that folder like the saved logins in your own browser. Delete it to log out.
+
+A few things to know. The Video app needs an internet connection, because the browser loads a real website. Sites sometimes show checks or puzzles, and you can solve those on the phone in Drag mode or in the desktop window. Websites also change over time, so it might stop working one day, and I can't promise it won't.
 
 ## What you can do with it
 
@@ -78,6 +99,7 @@ Only you can hear it. Playing music from your computer through the phone will co
 - Zoom in for far-away shots, or pull back for wide ones.
 - Throw the phone around and watch it bounce, or use it as a fidget toy.
 - Look back through all your photos on the phone itself, without opening a folder on your computer.
+- Watch short videos on the phone and hear them come from it.
 
 ## Settings
 
@@ -92,13 +114,26 @@ A few you might want:
 - `GrabRadius` sets how close your hand needs to be to grab the phone.
 - `PokeReach` sets how far past your finger's last joint the phone feels a touch. If presses land beyond where your finger looks, lower it. If you have to push through the screen, raise it.
 - `ShutterVolume` sets how loud the shutter click is.
-- `Volume`, in the `[Audio]` section, sets how loud the phone's tune starts, from 0 to 1. You can also use the plus and minus buttons on the phone. (Only builds with the Music sound test have this.)
-- `MuffleCutoff`, also in `[Audio]`, sets how muffled the tune gets behind a wall. A lower number is more muffled. (Only builds with the Music sound test have this too.)
+- `Volume`, in the `[Audio]` section, sets how loud the phone's sound starts, from 0 to 1. You can also use the plus and minus buttons on the phone. (Only builds with the Music sound test have this.)
+- `MuffleCutoff`, also in `[Audio]`, sets how muffled the sound gets behind a wall. A lower number is more muffled. (Only builds with the Music sound test have this too.)
 - `Enabled` turns the phone off without removing the file.
+
+These are in the `[Video]` section, and only builds with the Video app have them:
+
+- `StartUrl` is the page the Video app opens. If you land on a grid of small pictures instead of a video, change this to the address of a page that plays videos one at a time.
+- `PhoneSound` decides whether the video's sound comes out of the phone (the default) or stays on your computer's speakers.
+- `AudioDelayMs` is how long the sound waits before playing, so it lines up with the picture. Raise it if the sound gets ahead of the picture or has small gaps.
+- `TapAssist` sets how far a missed tap can jump to a nearby button, in pixels of the page. Set it to 0 to turn it off, and lower it if taps land on the wrong thing.
+- `Fps` sets the most pictures per second the phone draws. Lower it if the game feels choppy.
+- `ViewportWidth`, `FrameWidth` and `Mobile` change how big the page looks and whether the site shows its phone layout. These only apply the next time the browser starts, so restart the game after changing them.
+- `BrowserPath` is the full path to `msedge.exe` or `chrome.exe`. Leave it empty and the phone finds one by itself.
+- `Enabled` turns the Video app off.
 
 ## Good to know
 
-The phone is just for you. It stays on your computer, doesn't use the internet, and other players can't see it. It's built so you can't stand on it or push off it, so it doesn't change how the game plays.
+The phone is just for you. Other players can't see it, and it doesn't send anything through the game's network. The one part that uses the internet is the Video app, because the browser it starts loads a website. Your photos never leave your computer. The phone is built so you can't stand on it or push off it, so it doesn't change how the game plays.
+
+GorillaPhone is free software under the GNU General Public License, version 3. The full text is in the `LICENSE` file.
 
 GorillaPhone is a fan-made mod. It isn't made or supported by Another Axiom, the studio behind Gorilla Tag. Using any mod is at your own risk, so please keep that in mind.
 
@@ -110,6 +145,11 @@ GorillaPhone is a fan-made mod. It isn't made or supported by Another Axiom, the
 - A photo comes out upside down: open the settings file and change `PhotoFlip` from `Auto` to `Flip`. If it's still wrong, try `NoFlip`.
 - The Gallery says there are no photos: take one in the Camera app first, or check that `PhotoFolder` points to where your photos are.
 - A photo shows "can't open" in the Gallery: the Gallery reads photos taken by this mod. A picture that was edited or saved by another program might not open there.
+- The Video app says it can't find a browser: install Microsoft Edge or Google Chrome, or put the path to it in `BrowserPath`.
+- The Video app shows no picture: look at the browser window on your desktop. It might be waiting on a cookie message or a check, and you can answer it there. If the phone says the browser stopped, tap Reload and it starts again.
+- The video has small gaps in the sound: raise `AudioDelayMs` a little, for example to 300.
+- Taps in the Video app land on the wrong thing: lower `TapAssist`. If small buttons are hard to hit, raise it.
+- A browser window is still open after the game crashed: the phone closes it the next time you start the game, or you can just close the window yourself.
 
 If you find something else that's off, please open an issue on this page and tell me what happened. Screenshots and the `[GorillaPhone]` lines from `LogOutput.log` help a lot.
 
@@ -118,8 +158,8 @@ If you find something else that's off, please open an issue on this page and tel
 These are planned, but they aren't in this version, and I can't promise when they'll arrive:
 
 - A Music app that shows what's playing on your computer and lets you pause, skip, and change the volume.
-- A Video app for short form videos. It shows a website that plays them, running in a browser on your computer, right on the phone. You watch and swipe to scroll without leaving the game. This one is a big step, and I can't promise it will work.
-- Music from your computer coming out of the phone. The phone's sound already gets quieter with distance and muffled behind walls (try it in the Music app), but for now it only plays a built-in tune.
+- An on-screen keyboard, so you can type in the Video app (to search, to comment, or to log in) without taking the headset off.
+- Music from your computer coming out of the phone. The phone's sound already gets quieter with distance and muffled behind walls (try it in the Music and Video apps), but the Music app only plays a built-in tune for now.
 
 ## Thanks
 
