@@ -140,6 +140,19 @@ namespace GorillaPhone.Phone
             return RoundButton("GP_Minus", size, (x, y) => InRect(x, y, 0f, 0f, 0.22f, 0.035f));
         }
 
+        /// <summary>The music page's play button: a triangle, a little right of centre so it looks centred.</summary>
+        public static Texture2D Play(int size)
+        {
+            Vector2 a = new Vector2(-0.10f, -0.20f), b = new Vector2(-0.10f, 0.20f), c = new Vector2(0.21f, 0f);
+            return RoundButton("GP_Play", size, (x, y) => InTriangle(x, y, a, b, c));
+        }
+
+        /// <summary>The music page's pause button: two bars.</summary>
+        public static Texture2D Pause(int size)
+        {
+            return RoundButton("GP_Pause", size, (x, y) => InRect(x, y, -0.09f, 0f, 0.05f, 0.19f) || InRect(x, y, 0.09f, 0f, 0.05f, 0.19f));
+        }
+
         /// <summary>The home button: a small house.</summary>
         public static Texture2D Home(int size)
         {

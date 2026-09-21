@@ -10,6 +10,11 @@ ZoneManagement
 GTZone
 ZoneData
 GorillaSetZoneTrigger
-RaiseEvent
-PUN
-Fusion
+NetworkSystem
+NetworkSystemRaiseEvent
+NetPlayer
+NetworkSystemPUN
+NetworkSystemFusion
+RoomSystem
+FusionCallbackHandler
+DeSerializationExtensions

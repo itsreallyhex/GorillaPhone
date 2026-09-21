@@ -1,6 +1,7 @@
 using System;
 using BepInEx.Logging;
 using GorillaLocomotion;
+using GorillaPhone.Audio;
 using GorillaPhone.Photo;
 using UnityEngine;
 
@@ -34,6 +35,10 @@ namespace GorillaPhone.Phone
         Vector3 appliedSize;
         PhoneCamera pcam;
         PhoneScreen screen;
+        PhoneAudio sound;
+
+        /// <summary>The phone's sound (the Music page controls it).</summary>
+        public PhoneAudio Sound { get { return sound; } }
 
         /// <summary>True while a hand holds the phone, and which hand.</summary>
         public bool IsHeld { get { return held; } }
@@ -134,6 +139,8 @@ namespace GorillaPhone.Phone
             // The camera and the screen live on the same object and follow its size (ApplySize lays them out).
             pcam = gameObject.AddComponent<PhoneCamera>();
             pcam.Init(cfg, log, this);
+            sound = gameObject.AddComponent<PhoneAudio>();
+            sound.Init(cfg, log, this, locoMask);   // sound is blocked by the same layers the phone collides with: what the player walks on
             screen = gameObject.AddComponent<PhoneScreen>();
             screen.Init(cfg, log, this, pcam);
             ApplySize();

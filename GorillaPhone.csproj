@@ -110,12 +110,15 @@
   <ItemGroup>
     <Compile Include="Plugin.cs" />
     <Compile Include="PluginInfo.cs" />
+    <Compile Include="src\Audio\PhoneAudio.cs" />
+    <Compile Include="src\Audio\ToneSynth.cs" />
     <Compile Include="src\Diag\PhaseZeroDiag.cs" />
     <Compile Include="src\Phone\PhoneBack.cs" />
     <Compile Include="src\Phone\PhoneConfig.cs" />
     <Compile Include="src\Phone\PhoneMaterials.cs" />
     <Compile Include="src\Phone\PhoneScreen.cs" />
     <Compile Include="src\Phone\PhoneScreen.Gallery.cs" />
+    <Compile Include="src\Phone\PhoneScreen.Music.cs" />
     <Compile Include="src\Phone\PhoneText.cs" />
     <Compile Include="src\Phone\ShapeTextures.cs" />
     <Compile Include="src\Photo\PhoneCamera.cs" />

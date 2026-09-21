@@ -18,7 +18,7 @@ namespace GorillaPhone.Phone
     public sealed partial class PhoneScreen : MonoBehaviour
     {
         // Confirm is the "delete this photo?" question over the Viewer.
-        enum Page { Home, Camera, Gallery, Viewer, Confirm }
+        enum Page { Home, Camera, Gallery, Viewer, Confirm, Music }
 
         // Poking, in metres in the screen's own space (the viewer is on the -Z side).
         // A press happens when the fingertip crosses the plane PressDepth in front of the screen, moving toward it, and either
@@ -110,6 +110,7 @@ namespace GorillaPhone.Phone
             BuildHome();
             BuildCamera();
             BuildGallery();
+            BuildMusic();
 
             pcam.ModeChanged += OnModeChanged;
             pcam.ThumbnailChanged += OnThumbnailChanged;
@@ -184,7 +185,7 @@ namespace GorillaPhone.Phone
             Texture2D iconTex = Track(ShapeTextures.AppIcon(128));
             AddApp("Camera", new Color(0.20f, 0.55f, 0.95f), true, iconTex, Track(ShapeTextures.GlyphCamera(128)), OpenCamera);
             AddApp("Gallery", new Color(0.18f, 0.72f, 0.55f), true, iconTex, Track(ShapeTextures.GlyphGallery(128)), OpenGallery);
-            AddApp("Music", new Color(0.95f, 0.35f, 0.45f), false, iconTex, Track(ShapeTextures.GlyphMusic(128)), null);
+            AddApp("Music", new Color(0.95f, 0.35f, 0.45f), true, iconTex, Track(ShapeTextures.GlyphMusic(128)), OpenMusic);
             AddApp("Video", new Color(0.58f, 0.38f, 0.95f), false, iconTex, Track(ShapeTextures.GlyphVideo(128)), null);
         }
 
@@ -312,6 +313,7 @@ namespace GorillaPhone.Phone
             Place(thumb, -0.32f * sw, y, tw, th, -0.0016f);
 
             LayoutGallery(sw, sh, margin);
+            LayoutMusic(sw, sh, margin);
         }
 
         static void Place(Part p, float x, float y, float w, float h, float z)
@@ -334,6 +336,7 @@ namespace GorillaPhone.Phone
             homeRoot.gameObject.SetActive(p == Page.Home);
             camRoot.gameObject.SetActive(p == Page.Camera);
             galRoot.gameObject.SetActive(p == Page.Gallery);
+            musicRoot.gameObject.SetActive(p == Page.Music);
             viewRoot.gameObject.SetActive(p == Page.Viewer || p == Page.Confirm);
             confirmRoot.gameObject.SetActive(p == Page.Confirm);
             for (int h = 0; h < 2; h++) { armed[h] = false; prevValid[h] = false; touching[h] = false; }   // a page change is not a poke
@@ -396,6 +399,7 @@ namespace GorillaPhone.Phone
                 case Page.Home: UpdateHome(); break;
                 case Page.Camera: UpdateCamera(); break;
                 case Page.Gallery: UpdateGallery(); break;
+                case Page.Music: UpdateMusic(); break;
                 default: UpdateViewer(); break;
             }
 

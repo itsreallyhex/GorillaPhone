@@ -49,6 +49,11 @@ namespace GorillaPhone.Phone
         // Home screen
         public readonly ConfigEntry<string> DateFormat;
 
+        // Phone sound
+        public readonly ConfigEntry<float> AudioVolume;
+        public readonly ConfigEntry<float> MuffleCutoff;
+        public readonly ConfigEntry<bool> Spatialize;
+
         public PhoneConfig(ConfigFile c)
         {
             Enabled = c.Bind("Phone", "Enabled", true, "Spawn the phone when you load into the game.");
@@ -99,6 +104,14 @@ namespace GorillaPhone.Phone
 
             DateFormat = c.Bind("Home", "DateFormat", "",
                 "How the date is shown on the home screen. Empty uses your PC's own long date format (its language and order). Or give a .NET format such as \"dddd d MMMM\".");
+
+            AudioVolume = c.Bind("Audio", "Volume", 0.5f,
+                new ConfigDescription("How loud the phone's sound starts, 0 to 1. The phone's own + and - buttons change it while you play.", new AcceptableValueRange<float>(0f, 1f)));
+            MuffleCutoff = c.Bind("Audio", "MuffleCutoff", 800f,
+                new ConfigDescription("When something solid is between the phone and your head, the sound is filtered to below this many Hz (lower is more muffled).", new AcceptableValueRange<float>(200f, 5000f)));
+            Spatialize = c.Bind("Audio", "Spatialize", false,
+                "Send the phone's sound through the game's 3D audio plugin (better direction). Off by default: whether it works with the game's own audio setup is untested.");
+
         }
     }
 }
