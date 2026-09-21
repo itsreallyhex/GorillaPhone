@@ -67,6 +67,10 @@
       <HintPath>$(ManagedPath)\UnityEngine.AudioModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(ManagedPath)\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.XRModule">
       <HintPath>$(ManagedPath)\UnityEngine.XRModule.dll</HintPath>
       <Private>False</Private>
@@ -112,6 +116,13 @@
     <Compile Include="PluginInfo.cs" />
     <Compile Include="src\Audio\PhoneAudio.cs" />
     <Compile Include="src\Audio\ToneSynth.cs" />
+    <Compile Include="src\Audio\VideoAudioFeed.cs" />
+    <Compile Include="src\Video\AudioRing.cs" />
+    <Compile Include="src\Video\BrowserHost.cs" />
+    <Compile Include="src\Video\CdpClient.cs" />
+    <Compile Include="src\Video\MiniJson.cs" />
+    <Compile Include="src\Video\PageScripts.cs" />
+    <Compile Include="src\Phone\PhoneScreen.Video.cs" />
     <Compile Include="src\Diag\PhaseZeroDiag.cs" />
     <Compile Include="src\Phone\PhoneBack.cs" />
     <Compile Include="src\Phone\PhoneConfig.cs" />

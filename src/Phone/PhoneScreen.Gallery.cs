@@ -541,6 +541,7 @@ namespace GorillaPhone.Phone
         {
             if (!touching[h]) return;
             touching[h] = false;
+            VideoTouchCancel(h);
             dragging = touching[0] || touching[1];
         }
 

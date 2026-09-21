@@ -54,6 +54,18 @@ namespace GorillaPhone.Phone
         public readonly ConfigEntry<float> MuffleCutoff;
         public readonly ConfigEntry<bool> Spatialize;
 
+        // Video app
+        public readonly ConfigEntry<bool> VideoEnabled;
+        public readonly ConfigEntry<string> VideoStartUrl;
+        public readonly ConfigEntry<string> VideoBrowserPath;
+        public readonly ConfigEntry<float> VideoFps;
+        public readonly ConfigEntry<int> VideoViewportWidth;
+        public readonly ConfigEntry<int> VideoFrameWidth;
+        public readonly ConfigEntry<bool> VideoMobile;
+        public readonly ConfigEntry<bool> VideoHookAudio;
+        public readonly ConfigEntry<int> VideoAudioDelayMs;
+        public readonly ConfigEntry<int> VideoTapAssist;
+
         public PhoneConfig(ConfigFile c)
         {
             Enabled = c.Bind("Phone", "Enabled", true, "Spawn the phone when you load into the game.");
@@ -112,6 +124,26 @@ namespace GorillaPhone.Phone
             Spatialize = c.Bind("Audio", "Spatialize", false,
                 "Send the phone's sound through the game's 3D audio plugin (better direction). Off by default: whether it works with the game's own audio setup is untested.");
 
+            VideoEnabled = c.Bind("Video", "Enabled", true,
+                "Let the Video app start a browser. The browser is Microsoft Edge or Google Chrome, started by the phone in its own window with its own profile, and it uses the internet for the site.");
+            VideoStartUrl = c.Bind("Video", "StartUrl", "https://www.tiktok.com/foryou",
+                "The page the Video app opens. Any site with short vertical videos works best. (Older config files keep the earlier value, https://www.tiktok.com/; if you land on a grid of thumbnails instead of the feed, change it to this new one.)");
+            VideoBrowserPath = c.Bind("Video", "BrowserPath", "",
+                "Full path to msedge.exe or chrome.exe. Empty means look for Edge, then Chrome, in their usual places.");
+            VideoFps = c.Bind("Video", "Fps", 30f,
+                new ConfigDescription("Most pictures per second drawn on the phone's screen. Lower is lighter on the game.", new AcceptableValueRange<float>(5f, 60f)));
+            VideoViewportWidth = c.Bind("Video", "ViewportWidth", 540,
+                new ConfigDescription("Width in pixels the page thinks it has. Bigger shows more of a desktop layout in smaller print; smaller (about 400) suits a phone layout. Applies the next time the browser starts (restart the game).", new AcceptableValueRange<int>(320, 1400)));
+            VideoFrameWidth = c.Bind("Video", "FrameWidth", 540,
+                new ConfigDescription("Width in pixels of the pictures sent to the phone. Higher is sharper but heavier. Applies the next time the browser starts.", new AcceptableValueRange<int>(240, 1080)));
+            VideoMobile = c.Bind("Video", "Mobile", false,
+                "Ask the site for its phone layout (the page sees a phone's browser). Off shows the desktop layout. Applies the next time the browser starts.");
+            VideoHookAudio = c.Bind("Video", "PhoneSound", true,
+                "Play the page's sound from the phone in the game (3D, muffled by walls) instead of from your PC speakers. Off leaves the sound on the PC.");
+            VideoAudioDelayMs = c.Bind("Video", "AudioDelayMs", 200,
+                new ConfigDescription("How long the sound waits before playing. The picture arrives a little late, so a small delay lines them up; raise it if the sound is ahead of the picture, and it also smooths out gaps.", new AcceptableValueRange<int>(0, 600)));
+            VideoTapAssist = c.Bind("Video", "TapAssist", 24,
+                new ConfigDescription("A tap that lands on nothing clickable snaps to the nearest clickable spot within this many page pixels (small buttons such as a popup's close cross are hard to hit). 0 turns it off; a big number makes taps jump to the wrong thing.", new AcceptableValueRange<int>(0, 80)));
         }
     }
 }

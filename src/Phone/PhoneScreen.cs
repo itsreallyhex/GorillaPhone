@@ -18,7 +18,7 @@ namespace GorillaPhone.Phone
     public sealed partial class PhoneScreen : MonoBehaviour
     {
         // Confirm is the "delete this photo?" question over the Viewer.
-        enum Page { Home, Camera, Gallery, Viewer, Confirm, Music }
+        enum Page { Home, Camera, Gallery, Viewer, Confirm, Music, Video }
 
         // Poking, in metres in the screen's own space (the viewer is on the -Z side).
         // A press happens when the fingertip crosses the plane PressDepth in front of the screen, moving toward it, and either
@@ -111,6 +111,7 @@ namespace GorillaPhone.Phone
             BuildCamera();
             BuildGallery();
             BuildMusic();
+            BuildVideo();
 
             pcam.ModeChanged += OnModeChanged;
             pcam.ThumbnailChanged += OnThumbnailChanged;
@@ -186,7 +187,7 @@ namespace GorillaPhone.Phone
             AddApp("Camera", new Color(0.20f, 0.55f, 0.95f), true, iconTex, Track(ShapeTextures.GlyphCamera(128)), OpenCamera);
             AddApp("Gallery", new Color(0.18f, 0.72f, 0.55f), true, iconTex, Track(ShapeTextures.GlyphGallery(128)), OpenGallery);
             AddApp("Music", new Color(0.95f, 0.35f, 0.45f), true, iconTex, Track(ShapeTextures.GlyphMusic(128)), OpenMusic);
-            AddApp("Video", new Color(0.58f, 0.38f, 0.95f), false, iconTex, Track(ShapeTextures.GlyphVideo(128)), null);
+            AddApp("Video", new Color(0.58f, 0.38f, 0.95f), true, iconTex, Track(ShapeTextures.GlyphVideo(128)), OpenVideo);
         }
 
         void AddApp(string name, Color tint, bool ready, Texture2D iconTex, Texture2D glyphTex, Action open)
@@ -314,6 +315,7 @@ namespace GorillaPhone.Phone
 
             LayoutGallery(sw, sh, margin);
             LayoutMusic(sw, sh, margin);
+            LayoutVideo(sw, sh, margin);
         }
 
         static void Place(Part p, float x, float y, float w, float h, float z)
@@ -337,12 +339,14 @@ namespace GorillaPhone.Phone
             camRoot.gameObject.SetActive(p == Page.Camera);
             galRoot.gameObject.SetActive(p == Page.Gallery);
             musicRoot.gameObject.SetActive(p == Page.Music);
+            videoRoot.gameObject.SetActive(p == Page.Video);
             viewRoot.gameObject.SetActive(p == Page.Viewer || p == Page.Confirm);
             confirmRoot.gameObject.SetActive(p == Page.Confirm);
-            for (int h = 0; h < 2; h++) { armed[h] = false; prevValid[h] = false; touching[h] = false; }   // a page change is not a poke
+            for (int h = 0; h < 2; h++) { VideoTouchCancel(h); armed[h] = false; prevValid[h] = false; touching[h] = false; }   // a page change is not a poke
             dragging = false;
             pcam.PreviewEnabled = screenOn && p == Page.Camera;
             OnPageChanged(p);
+            VideoPageChanged(p);
         }
 
         void OpenGallery()
@@ -377,7 +381,7 @@ namespace GorillaPhone.Phone
             screenOn = on;
             root.gameObject.SetActive(on);
             if (!on) offSince = Time.unscaledTime;
-            else if (Time.unscaledTime - offSince > 8f) page = Page.Home;   // a long sleep returns to the home screen
+            else if (Time.unscaledTime - offSince > 8f && page != Page.Video) page = Page.Home;   // a long sleep returns to the home screen (a playing video stays open)
             SetPage(page);
         }
 
@@ -389,6 +393,7 @@ namespace GorillaPhone.Phone
 
             // Finished background work (a scan, a decoded photo, a delete) is handled even while the screen is off.
             if (worker != null) worker.Pump(6);
+            DrainVideoLog();
 
             bool on = ShouldBeOn();
             if (on != screenOn) SetScreen(on);
@@ -400,6 +405,7 @@ namespace GorillaPhone.Phone
                 case Page.Camera: UpdateCamera(); break;
                 case Page.Gallery: UpdateGallery(); break;
                 case Page.Music: UpdateMusic(); break;
+                case Page.Video: UpdateVideo(); break;
                 default: UpdateViewer(); break;
             }
 
@@ -509,8 +515,8 @@ namespace GorillaPhone.Phone
                 {
                     // Released only when the finger clearly leaves (2 cm in front) or is far through: a hand wobbles more than 0.6 cm in depth, and that dropped every drag.
                     bool still = overScreen && p.z >= -TouchRelease && p.z < TouchMaxBehind;
-                    if (still) GalleryTouchMove(h, p);
-                    else { touching[h] = false; GalleryTouchEnd(h, p); }
+                    if (still) TouchMove(h, p);
+                    else { touching[h] = false; TouchEnd(h, p); }
                 }
 
                 if (prevValid[h] && dt > 0f)
@@ -536,10 +542,10 @@ namespace GorillaPhone.Phone
                                 phone.Haptic(left, b.OnPress != null ? 0.35f : 0.12f, 0.04f);   // a lighter buzz for an app that is not there yet
                                 if (b.OnPress != null) b.OnPress();
                             }
-                            else if (b == null && GalleryWantsTouch(at))
+                            else if (b == null && WantsTouch(at))
                             {
-                                touching[h] = true;   // a press into the photo grid starts a tap or a drag
-                                GalleryTouchBegin(h, at, left);
+                                touching[h] = true;   // a press into the photo grid or the video starts a tap, a swipe or a drag
+                                TouchBegin(h, at, left);
                             }
                         }
                     }
@@ -547,6 +553,27 @@ namespace GorillaPhone.Phone
                 prevTip[h] = p;
                 prevValid[h] = true;
             }
+        }
+
+        // A finger that pressed into the Gallery grid or the Video picture is a touch; each page decides what a touch means.
+        bool WantsTouch(Vector3 at) { return GalleryWantsTouch(at) || VideoWantsTouch(at); }
+
+        void TouchBegin(int h, Vector3 at, bool left)
+        {
+            if (page == Page.Video) VideoTouchBegin(h, at, left);
+            else GalleryTouchBegin(h, at, left);
+        }
+
+        void TouchMove(int h, Vector3 p)
+        {
+            if (page == Page.Video) VideoTouchMove(h, p);
+            else GalleryTouchMove(h, p);
+        }
+
+        void TouchEnd(int h, Vector3 p)
+        {
+            if (page == Page.Video) VideoTouchEnd(h, p);
+            else GalleryTouchEnd(h, p);
         }
 
         Button Hit(Vector3 p)
@@ -600,6 +627,7 @@ namespace GorillaPhone.Phone
                 pcam.PreviewEnabled = false;
             }
             DestroyGallery();
+            DestroyVideo();
             foreach (Texture2D t in textures) if (t != null) Destroy(t);
             foreach (Material m in materials) if (m != null) Destroy(m);
         }

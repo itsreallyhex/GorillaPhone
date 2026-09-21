@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using BepInEx.Logging;
 using GorillaPhone.Phone;
+using GorillaPhone.Video;
 using UnityEngine;
 
 namespace GorillaPhone.Audio
@@ -38,6 +39,13 @@ namespace GorillaPhone.Audio
         float volume = 0.5f, cfgVolumeSeen = -1f, cutoff = ClearCutoff, occlusion = 1f;
         float nextCheck, nextLog, checkPlayingAt = -1f;
         readonly RaycastHit[] hits = new RaycastHit[4];
+
+        // The Video app's voice: a second source on its own child object, sharing the chime's volume, wall muffling and rolloff.
+        AudioSource vSource;
+        AudioLowPassFilter vLow;
+        VideoAudioFeed vFeed;   // a plain object: the streaming clip's read callback
+        AudioClip vClip;
+        bool videoWanted, loggedVideoFormat;
 
         /// <summary>True while the chime is wanted (it may still be loading for a moment the first time).</summary>
         public bool Playing { get { return wantPlaying; } }
@@ -111,6 +119,51 @@ namespace GorillaPhone.Audio
             volume = Mathf.Clamp01(Mathf.Round((volume + delta) * 20f) / 20f);   // steps of 5%
         }
 
+        /// <summary>
+        /// Start or stop the Video app's sound: the browser's page sound (buffered in ring) played from the phone in 3D, with the same
+        /// volume, distance falloff and wall muffling as the chime. Made on first use.
+        /// </summary>
+        public void SetVideo(AudioRing ring, bool on)
+        {
+            if (on && vSource == null) BuildVideoVoice();
+            videoWanted = on;
+            if (vFeed != null)
+            {
+                vFeed.Ring = ring;
+                vFeed.Active = on;
+            }
+        }
+
+        void BuildVideoVoice()
+        {
+            var go = new GameObject("GP_VideoAudio");
+            go.layer = 0;
+            go.transform.SetParent(transform, false);
+
+            vSource = go.AddComponent<AudioSource>();
+            vSource.playOnAwake = false;
+            vSource.loop = true;
+            vSource.spatialBlend = 1f;
+            vSource.dopplerLevel = 0f;
+            vSource.priority = 100;
+            vSource.minDistance = MinDistance;
+            vSource.maxDistance = MaxHear;
+            vSource.rolloffMode = AudioRolloffMode.Custom;
+            vSource.SetCustomCurve(AudioSourceCurveType.CustomRolloff, RolloffCurve());
+            vSource.volume = 0f;
+            // A MONO streaming clip: Unity pulls its samples through the feed's callback and then does its normal 3D processing (distance,
+            // panning, filters, spatializer), exactly as for the chime. (Overwriting the sound in OnAudioFilterRead instead did not work:
+            // Unity handed that filter the source's already-processed output, so the sound had no position.)
+            vFeed = new VideoAudioFeed();
+            vClip = AudioClip.Create("GP_VideoStream", VideoAudioFeed.Rate, 1, VideoAudioFeed.Rate, true, vFeed.Fill);
+            vSource.clip = vClip;
+
+            vLow = go.AddComponent<AudioLowPassFilter>();
+            vLow.cutoffFrequency = ClearCutoff;
+            vLow.enabled = false;
+            log.LogInfo("phone audio: video voice made (a mono streaming clip, output rate " + AudioSettings.outputSampleRate + " Hz)");
+        }
+
         void Update()
         {
             if (source == null) return;
@@ -150,7 +203,19 @@ namespace GorillaPhone.Audio
                             + ", distance to head=" + HeadDistance().ToString("0.0") + " m");
             }
 
-            if (!source.isPlaying) return;
+            if (vSource != null)
+            {
+                if (videoWanted && !vSource.isPlaying) vSource.Play();
+                else if (!videoWanted && vSource.isPlaying) vSource.Stop();
+                if (vSource.spatialize != cfg.Spatialize.Value) vSource.spatialize = cfg.Spatialize.Value;
+                if (!loggedVideoFormat && vFeed != null && vFeed.SeenSamples != 0)
+                {
+                    loggedVideoFormat = true;
+                    log.LogInfo("phone audio: video voice is being read by Unity in blocks of " + vFeed.SeenSamples + " samples");
+                }
+            }
+            bool videoPlaying = vSource != null && vSource.isPlaying;
+            if (!source.isPlaying && !videoPlaying) return;
 
             if (Time.unscaledTime >= nextCheck)
             {
@@ -173,6 +238,12 @@ namespace GorillaPhone.Audio
             if (lowpass.enabled != filtering) lowpass.enabled = filtering;
             if (filtering) lowpass.cutoffFrequency = cutoff;
             source.volume = volume * occlusion;
+            if (vSource != null)
+            {
+                if (vLow.enabled != filtering) vLow.enabled = filtering;
+                if (filtering) vLow.cutoffFrequency = cutoff;
+                vSource.volume = volume * occlusion;
+            }
         }
 
         void BuildClip()
@@ -222,6 +293,7 @@ namespace GorillaPhone.Audio
         void OnDestroy()
         {
             if (clip != null) Destroy(clip);
+            if (vClip != null) Destroy(vClip);
         }
     }
 }
