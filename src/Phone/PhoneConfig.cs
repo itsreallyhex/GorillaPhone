@@ -66,6 +66,14 @@ namespace GorillaPhone.Phone
         public readonly ConfigEntry<int> VideoAudioDelayMs;
         public readonly ConfigEntry<int> VideoTapAssist;
 
+        // Network: the real phone beacon (step 9b)
+        public readonly ConfigEntry<bool> NetPhoneEnabled;
+
+        // Network lab (development only, off by default)
+        public readonly ConfigEntry<bool> NetLab;
+        public readonly ConfigEntry<bool> NetLabRun;
+        public readonly ConfigEntry<bool> NetLabAnyRoom;
+
         public PhoneConfig(ConfigFile c)
         {
             Enabled = c.Bind("Phone", "Enabled", true, "Spawn the phone when you load into the game.");
@@ -144,6 +152,16 @@ namespace GorillaPhone.Phone
                 new ConfigDescription("How long the sound waits before playing. The picture arrives a little late, so a small delay lines them up; raise it if the sound is ahead of the picture, and it also smooths out gaps.", new AcceptableValueRange<int>(0, 600)));
             VideoTapAssist = c.Bind("Video", "TapAssist", 24,
                 new ConfigDescription("A tap that lands on nothing clickable snaps to the nearest clickable spot within this many page pixels (small buttons such as a popup's close cross are hard to hit). 0 turns it off; a big number makes taps jump to the wrong thing.", new AcceptableValueRange<int>(0, 80)));
+
+            NetPhoneEnabled = c.Bind("Network", "NetPhoneEnabled", true,
+                "See other modded players' phones: their position, who's holding them and which app is open, and let them see yours. Sends your own phone's state (position, rotation, holder, open app -- never a photo, video or sound) about 10 times a second over the game's own event channel while you're in a room with someone else; players without the mod are unaffected. On by default: a cosmetic phone gives nobody an advantage. Turn off to keep the phone fully local again.");
+
+            NetLab = c.Bind("Network", "NetLab", true,
+                "DEVELOPMENT ONLY. Listen for the phone's network test messages (event code 151) and log what arrives. Sends nothing by itself. On by default; nothing about the phone is networked yet.");
+            NetLabRun = c.Bind("Network", "NetLabRun", false,
+                "DEVELOPMENT ONLY. Set to true (with NetLab on) to run one short test that sends a few dozen small test messages to find the game's message size and rate limits. A trigger, so it stays off by default; it resets to false after it starts.");
+            NetLabAnyRoom = c.Bind("Network", "AllowAnyRoom", true,
+                "Let the network test run in any room. Turn this off to make it run only in modded rooms (a room whose game mode contains MODDED_).");
         }
     }
 }

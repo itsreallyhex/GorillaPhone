@@ -58,6 +58,35 @@ namespace GorillaPhone.Phone
             public Button Btn;
         }
 
+        /// <summary>A small stable id for the page currently open, for the network beacon (PhoneNetSync): 0 Home, 1 Camera, 2 Gallery (also while viewing or confirming a delete), 3 Music, 4 Video.</summary>
+        public byte NetAppId
+        {
+            get
+            {
+                switch (page)
+                {
+                    case Page.Camera: return 1;
+                    case Page.Gallery: case Page.Viewer: case Page.Confirm: return 2;
+                    case Page.Music: return 3;
+                    case Page.Video: return 4;
+                    default: return 0;
+                }
+            }
+        }
+
+        /// <summary>Turns a NetAppId (from another player's beacon) back into a short label. An id outside 0-4 (a bad or future sender) reads as "Home".</summary>
+        public static string NetAppName(byte id)
+        {
+            switch (id)
+            {
+                case 1: return "Camera";
+                case 2: return "Gallery";
+                case 3: return "Music";
+                case 4: return "Video";
+                default: return "Home";
+            }
+        }
+
         PhoneConfig cfg;
         ManualLogSource log;
         PhoneObject phone;

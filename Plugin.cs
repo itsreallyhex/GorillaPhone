@@ -2,6 +2,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using GorillaLocomotion;
 using GorillaPhone.Diag;
+using GorillaPhone.Net;
 using GorillaPhone.Phone;
 using GorillaPhone.Util;
 using UnityEngine;
@@ -18,6 +19,8 @@ namespace GorillaPhone
         ConfigEntry<bool> runPhase0;
         ConfigWatcher watcher;
         PhoneObject phone;
+        NetLab netLab;   // development only: made when [Network] NetLab is on
+        PhoneNetSync netSync;   // the real phone beacon (step 9b): made when [Network] NetPhoneEnabled is on
 
         bool spawned;
         bool phase0Started;
@@ -57,17 +60,43 @@ namespace GorillaPhone
                 StartCoroutine(new PhaseZeroDiag(Logger).Run());
             }
 
+            // The network lab (development only, off by default): listen when NetLab is on, and start one test run when NetLabRun turns on.
+            if (phoneCfg.NetLab.Value)
+            {
+                if (netLab == null) netLab = new NetLab(Logger, phoneCfg);
+                netLab.Subscribe();
+                if (phoneCfg.NetLabRun.Value && !netLab.Running)
+                {
+                    phoneCfg.NetLabRun.Value = false;
+                    StartCoroutine(netLab.Run());
+                }
+            }
+
             // Unity's null check is true again if the game destroyed the phone (for example with a rig).
             if (phone == null && phoneCfg.Enabled.Value && Time.time >= nextSpawnTry)
             {
                 nextSpawnTry = Time.time + 3f;
                 phone = PhoneObject.Create(phoneCfg, Logger);
             }
+
+            // The real phone beacon (step 9b): see other modded players' phones, and let them see yours.
+            if (phoneCfg.NetPhoneEnabled.Value)
+            {
+                if (netSync == null) netSync = new PhoneNetSync(Logger, phoneCfg);
+                netSync.Tick(phone);
+            }
+            else if (netSync != null)
+            {
+                netSync.Dispose();
+                netSync = null;
+            }
         }
 
         void OnDestroy()
         {
             if (watcher != null) watcher.Dispose();
+            if (netLab != null) netLab.Unsubscribe();
+            if (netSync != null) netSync.Dispose();
             if (phone != null) Destroy(phone.gameObject);
         }
     }

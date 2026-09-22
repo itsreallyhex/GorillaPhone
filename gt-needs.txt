@@ -18,3 +18,15 @@ NetworkSystemFusion
 RoomSystem
 FusionCallbackHandler
 DeSerializationExtensions
+NetEventOptions
+PUNCallbackNotifier
+ConsentScreen
+ConsentHoldButton
+LegalAgreementCheck
+LegalAgreements
+ModIOTermsOfUse_v1
+GorillaTagScripts.VirtualStumpCustomMaps.ModIO.ModIOTermsOfUse_v2
+KIDAgeGate
+KIDAgeGateConfirmation
+GRFirstTimeUserExperience
+ControllerBehaviour

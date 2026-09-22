@@ -39,6 +39,8 @@ namespace GorillaPhone.Phone
 
         /// <summary>The phone's sound (the Music page controls it).</summary>
         public PhoneAudio Sound { get { return sound; } }
+        /// <summary>The phone's screen (the network beacon reads which app is open from it).</summary>
+        public PhoneScreen Screen { get { return screen; } }
 
         /// <summary>True while a hand holds the phone, and which hand.</summary>
         public bool IsHeld { get { return held; } }

@@ -117,6 +117,9 @@
     <Compile Include="src\Audio\PhoneAudio.cs" />
     <Compile Include="src\Audio\ToneSynth.cs" />
     <Compile Include="src\Audio\VideoAudioFeed.cs" />
+    <Compile Include="src\Net\NetLab.cs" />
+    <Compile Include="src\Net\PhoneNetSync.cs" />
+    <Compile Include="src\Net\RemotePhoneVisual.cs" />
     <Compile Include="src\Video\AudioRing.cs" />
     <Compile Include="src\Video\BrowserHost.cs" />
     <Compile Include="src\Video\CdpClient.cs" />
